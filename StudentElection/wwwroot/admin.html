@@ -1,0 +1,630 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SSLG Election 2027 - Admin</title>
+    <script>
+        // If already logged in, never flash the login screen
+        try { if (sessionStorage.getItem('adminKey')) document.documentElement.classList.add('has-key'); } catch (e) { }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --navy: #0c1a4d;
+            --blue: #1f3f9e;
+            --red: #e10b1c;
+            --dark-red: #a30612;
+            --gold: #e8b930;
+            --silver: #d7dbe0;
+            --ink: #1b2236;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI",Arial,sans-serif;
+            color: var(--ink);
+            background: linear-gradient(120deg,#e6ecfa 0%,#f7f1f3 50%,#fbe6e8 100%);
+        }
+            /* Faded poster background */
+            body::before {
+                content: "";
+                position: fixed;
+                inset: 0;
+                z-index: -1;
+                background: url('/sslg-logo.png') center/cover no-repeat;
+                opacity: .25;
+            }
+
+        /* Logo (shared) */
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+            .logo img {
+                max-width: 100%;
+                max-height: 100%;
+                filter: drop-shadow(0 6px 12px rgba(0,0,0,.4))
+            }
+
+            .logo .fallback {
+                display: none;
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+                align-items: center;
+                justify-content: center;
+                font-weight: 800;
+                color: var(--navy);
+                font-size: 18px;
+                background: radial-gradient(circle at 35% 30%, #fff, var(--silver) 60%, #9aa1ab);
+                border: 4px solid var(--gold);
+            }
+
+            .logo.nologo img {
+                display: none
+            }
+
+            .logo.nologo .fallback {
+                display: flex
+            }
+
+        /* Header */
+        header {
+            background: linear-gradient(100deg, var(--navy) 0%, var(--blue) 45%, var(--dark-red) 100%);
+            color: #fff;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            border-bottom: 4px solid var(--gold);
+            box-shadow: 0 4px 14px rgba(0,0,0,.25);
+        }
+
+        .hl {
+            display: flex;
+            align-items: center;
+            gap: 14px
+        }
+
+            .hl .logo {
+                width: 72px;
+                height: 72px
+            }
+
+        header h1 {
+            margin: 0;
+            font-size: 16px;
+            letter-spacing: .5px;
+            line-height: 1.3
+        }
+
+            header h1 .sch {
+                display: block;
+                font-size: 14px;
+                color: var(--gold)
+            }
+
+        header small {
+            display: block;
+            opacity: .85;
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-top: 2px
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 15px
+        }
+
+        .panel {
+            background: rgba(255,255,255,.96);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 12px rgba(12,26,77,.12);
+            border-top: 3px solid var(--blue)
+        }
+
+        h2 {
+            margin: 0 0 14px;
+            font-size: 17px;
+            color: var(--navy)
+        }
+
+        h3 {
+            margin: 0 0 8px;
+            font-size: 14px;
+            color: var(--blue)
+        }
+
+        input, select {
+            padding: 10px;
+            border: 1.5px solid #c9d0de;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #fff
+        }
+
+            input:focus, select:focus {
+                outline: none;
+                border-color: var(--blue);
+                box-shadow: 0 0 0 3px rgba(31,63,158,.18)
+            }
+
+        button {
+            padding: 10px 16px;
+            border: 0;
+            border-radius: 8px;
+            background: var(--blue);
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600
+        }
+
+            button:hover {
+                filter: brightness(1.12)
+            }
+
+            button.red {
+                background: linear-gradient(180deg,var(--red),var(--dark-red))
+            }
+
+            button.gold {
+                background: linear-gradient(180deg,#f3cb55,#c99a1c);
+                color: #2a2000
+            }
+
+            button.small {
+                padding: 6px 11px;
+                font-size: 13px
+            }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px
+        }
+
+        th, td {
+            text-align: left;
+            padding: 9px;
+            border-bottom: 1px solid #e3e7f0;
+            white-space: nowrap
+        }
+
+        th {
+            background: var(--navy);
+            color: #fff;
+            font-size: 12px;
+            letter-spacing: .5px;
+            position: sticky;
+            top: 0
+        }
+
+        tr:hover td {
+            background: #f6f8fd
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center
+        }
+
+        .scroll {
+            max-height: 420px;
+            overflow: auto;
+            border-radius: 8px
+        }
+
+        .charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit,minmax(320px,1fr));
+            gap: 18px
+        }
+
+        .chartbox {
+            border: 1px solid #e3e7f0;
+            border-radius: 10px;
+            padding: 12px;
+            border-top: 3px solid var(--gold);
+            background: #fff
+        }
+
+        /* Login: fixed full-screen, no page scrolling */
+        #login-wrap {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            overflow: auto;
+            display: flex;
+            padding: 16px;
+            background: linear-gradient(120deg,#e6ecfa 0%,#f7f1f3 50%,#fbe6e8 100%);
+        }
+
+            #login-wrap::before {
+                content: "";
+                position: fixed;
+                inset: 0;
+                z-index: -1;
+                background: url('/sslg-bg.jpg') center/cover no-repeat;
+                opacity: .25;
+            }
+
+        #login {
+            margin: auto;
+            width: 100%;
+            max-width: 380px;
+            background: rgba(255,255,255,.97);
+            padding: 22px 26px 26px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 14px 40px rgba(12,26,77,.3);
+            border-top: 5px solid var(--gold)
+        }
+
+            #login .logo {
+                width: 150px;
+                height: 150px;
+                margin: 0 auto 6px
+            }
+
+                #login .logo .fallback {
+                    width: 130px;
+                    height: 130px;
+                    font-size: 30px
+                }
+
+            #login .sch {
+                margin: 0;
+                font-size: 14px;
+                font-weight: 800;
+                color: var(--blue)
+            }
+
+            #login .ttl {
+                margin: 2px 0 10px;
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--navy);
+                text-transform: uppercase;
+                letter-spacing: .5px;
+                line-height: 1.3
+            }
+
+            #login h2 {
+                margin: 0 0 2px
+            }
+
+            #login input, #login button {
+                width: 100%;
+                margin-top: 12px
+            }
+
+        .has-key #login-wrap {
+            display: none
+        }
+
+        .hidden {
+            display: none
+        }
+
+        .err {
+            color: var(--dark-red);
+            font-size: 14px;
+            margin-top: 8px;
+            font-weight: 600
+        }
+
+        .total {
+            font-size: 14px;
+            color: #475569;
+            margin-bottom: 10px;
+            font-weight: 600
+        }
+
+        .danger {
+            border: 1.5px solid #f4b4ba;
+            background: #fff5f5;
+            border-top: 3px solid var(--red)
+        }
+
+            .danger p {
+                margin: 0 0 12px;
+                font-size: 14px;
+                color: #7f1d1d
+            }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN -->
+    <div id="login-wrap">
+        <div id="login">
+            <div class="logo">
+                <img src="/sslg-logo.png" alt="SSLG" onerror="this.parentElement.classList.add('nologo')">
+                <div class="fallback">SSLG</div>
+            </div>
+            <p class="sch">M. B. Asistio Sr. High School - Unit 1</p>
+            <p class="ttl">Supreme Secondary Learner Government Election 2027</p>
+            <h2>Admin Login</h2>
+            <input type="password" id="pw" placeholder="Password">
+            <button class="red" id="btnLogin">Login</button>
+            <div class="err" id="loginErr"></div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="app" class="hidden">
+        <header>
+            <div class="hl">
+                <div class="logo">
+                    <img src="/sslg-logo.png" alt="SSLG" onerror="this.parentElement.classList.add('nologo')">
+                    <div class="fallback">SSLG</div>
+                </div>
+                <div>
+                    <h1>
+                        <span class="sch">M. B. Asistio Sr. High School - Unit 1</span>
+                        Supreme Secondary Learner Government Election 2027
+                    </h1>
+                    <small>Admin Dashboard</small>
+                </div>
+            </div>
+            <div class="row">
+                <button onclick="refresh()">Refresh</button>
+                <button class="gold" onclick="exportExcel()">Export Excel</button>
+                <button class="red" onclick="logout()">Logout</button>
+            </div>
+        </header>
+
+        <main>
+            <div class="panel">
+                <h2>Add Candidate</h2>
+                <div class="row">
+                    <input id="cName" placeholder="Candidate name" style="min-width:240px">
+                    <select id="cPosition"></select>
+                    <select id="cGrade" class="hidden">
+                        <option value="8">Grade 8</option>
+                        <option value="9">Grade 9</option>
+                        <option value="10">Grade 10</option>
+                        <option value="11">Grade 11</option>
+                        <option value="12">Grade 12</option>
+                    </select>
+                    <button onclick="addCandidate()">Add</button>
+                </div>
+                <div class="err" id="cErr"></div>
+            </div>
+
+            <div class="panel">
+                <h2>Candidates</h2>
+                <div class="scroll">
+                    <table>
+                        <thead><tr><th>Name</th><th>Position</th><th></th></tr></thead>
+                        <tbody id="candBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Results (Charts)</h2>
+                <div class="charts" id="charts"></div>
+            </div>
+
+            <div class="panel">
+                <h2>Database - Votes</h2>
+                <div class="total" id="total"></div>
+                <div class="scroll">
+                    <table>
+                        <thead><tr id="voteHead"></tr></thead>
+                        <tbody id="voteBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel danger">
+                <h2>Reset Data</h2>
+                <p>This cannot be undone. Click "Export Excel" first if you want to keep a copy.</p>
+                <div class="row">
+                    <button class="red" onclick="resetData('votes')">Reset Votes Only (keep candidates)</button>
+                    <button class="red" onclick="resetData('all')">Reset Everything (votes + candidates)</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const $ = id => document.getElementById(id);
+        let key = '';
+        try { key = sessionStorage.getItem('adminKey') || ''; } catch (e) { }
+        let positions = [];
+        let charts = [];
+        const PALETTE = ['#e10b1c', '#1f3f9e', '#e8b930', '#a30612', '#3b6fe0', '#b8891a'];
+
+        function api(url, opt = {}) {
+            opt.headers = { ...(opt.headers || {}), 'X-Admin-Key': key };
+            return fetch(url, opt);
+        }
+
+        $('btnLogin').onclick = async () => {
+            const pw = $('pw').value;
+            const res = await fetch('/api/admin/login', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: pw })
+            });
+            if (!res.ok) { $('loginErr').textContent = 'Incorrect password.'; return; }
+            key = pw;
+            try { sessionStorage.setItem('adminKey', pw); } catch (e) { }
+            showApp();
+        };
+        $('pw').addEventListener('keydown', e => { if (e.key === 'Enter') $('btnLogin').click(); });
+
+        async function showApp() {
+            const res = await api('/api/admin/positions');
+            if (res.status === 401) return logout();
+            positions = await res.json();
+
+            $('cPosition').innerHTML = positions.map(p =>
+                `<option value="${esc(p.key)}">${esc(p.label)}</option>`).join('');
+            toggleGrade();
+
+            // Go straight to the dashboard
+            $('login-wrap').classList.add('hidden');
+            document.documentElement.classList.remove('has-key');
+            $('login-wrap').style.display = 'none';
+            $('app').classList.remove('hidden');
+            window.scrollTo(0, 0);
+
+            refresh();
+        }
+
+        $('cPosition').onchange = toggleGrade;
+        function toggleGrade() {
+            $('cGrade').classList.toggle('hidden', $('cPosition').value !== 'Representative');
+        }
+
+        function logout() {
+            try { sessionStorage.removeItem('adminKey'); } catch (e) { }
+            location.reload();
+        }
+
+        async function refresh() {
+            await Promise.all([loadCandidates(), loadResults(), loadVotes()]);
+        }
+
+        async function loadCandidates() {
+            const res = await api('/api/admin/candidates');
+            if (res.status === 401) return logout();
+            const data = await res.json();
+            $('candBody').innerHTML = data.map(c => `
+          <tr><td>${esc(c.name)}</td>
+          <td>${esc(c.positionLabel)}${c.grade ? ' - Grade ' + c.grade : ''}</td>
+          <td><button class="red small" onclick="delCandidate(${c.id})">Delete</button></td></tr>`).join('')
+                || '<tr><td colspan="3">No candidates yet.</td></tr>';
+        }
+
+        async function addCandidate() {
+            $('cErr').textContent = '';
+            const position = $('cPosition').value;
+            const res = await api('/api/admin/candidates', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: $('cName').value,
+                    position,
+                    grade: position === 'Representative' ? parseInt($('cGrade').value) : null
+                })
+            });
+            if (!res.ok) { const d = await res.json(); $('cErr').textContent = d.message || 'Error'; return; }
+            $('cName').value = '';
+            refresh();
+        }
+
+        async function delCandidate(id) {
+            if (!confirm('Delete this candidate?')) return;
+            const res = await api('/api/admin/candidates/' + id, { method: 'DELETE' });
+            if (!res.ok) { const d = await res.json(); alert(d.message || 'Error'); return; }
+            refresh();
+        }
+
+        async function loadResults() {
+            const res = await api('/api/admin/results');
+            const data = await res.json();
+
+            charts.forEach(c => c.destroy());
+            charts = [];
+            const box = $('charts');
+            box.innerHTML = '';
+
+            positions.forEach(p => {
+                const list = data.filter(d => d.position === p.key);
+                if (!list.length) return;
+
+                const div = document.createElement('div');
+                div.className = 'chartbox';
+                div.innerHTML = '<h3></h3><canvas></canvas>';
+                div.querySelector('h3').textContent = p.label;
+                box.appendChild(div);
+
+                charts.push(new Chart(div.querySelector('canvas'), {
+                    type: 'bar',
+                    data: {
+                        labels: list.map(d => p.key === 'Representative' ? `${d.name} (G${d.grade})` : d.name),
+                        datasets: [{
+                            label: 'Votes',
+                            data: list.map(d => d.votes),
+                            backgroundColor: list.map((_, i) => PALETTE[i % PALETTE.length]),
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                    }
+                }));
+            });
+
+            if (!box.children.length) box.innerHTML = '<p>No candidates yet.</p>';
+        }
+
+        async function loadVotes() {
+            const res = await api('/api/admin/votes');
+            const data = await res.json();
+            $('total').textContent = 'Total voters: ' + data.length;
+
+            $('voteHead').innerHTML =
+                '<th>#</th><th>Voter</th><th>Voter ID</th><th>Grade</th>' +
+                positions.map(p => `<th>${esc(p.label)}</th>`).join('') +
+                '<th>Date/Time</th>';
+
+            $('voteBody').innerHTML = data.map(v => `
+          <tr><td>${v.id}</td><td>${esc(v.voterName)}</td><td>${esc(v.voterIdNo)}</td><td>G${v.voterGrade}</td>
+          ${positions.map(p => `<td>${esc(v.choices[p.key] ?? '-')}</td>`).join('')}
+          <td>${new Date(v.votedAt).toLocaleString()}</td></tr>`).join('')
+                || `<tr><td colspan="${positions.length + 5}">No votes yet.</td></tr>`;
+        }
+
+        async function exportExcel() {
+            const res = await api('/api/admin/export');
+            if (!res.ok) { alert('Export failed.'); return; }
+            const blob = await res.blob();
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `sslg-election-${new Date().toISOString().slice(0, 10)}.xlsx`;
+            a.click();
+        }
+
+        async function resetData(mode) {
+            const msg = mode === 'all'
+                ? 'This will permanently delete ALL votes AND ALL candidates.'
+                : 'This will permanently delete ALL votes. Candidates will be kept.';
+            const t = prompt(msg + '\n\nTip: click "Export Excel" first to keep a copy.\n\nType RESET to continue:');
+            if (t !== 'RESET') return;
+
+            const res = await api('/api/admin/reset', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mode })
+            });
+            if (!res.ok) { const d = await res.json().catch(() => ({})); alert(d.message || 'Reset failed.'); return; }
+            alert('Reset complete.');
+            refresh();
+        }
+
+        function esc(s) { return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
+
+        if (key) showApp();
+    </script>
+</body>
+</html>
