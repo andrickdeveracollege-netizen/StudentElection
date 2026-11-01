@@ -24,7 +24,7 @@ body::before {
     position: fixed;
     inset: 0;
     z-index: -1;
-    background: url('/sslg-logo.png') center/cover no-repeat;
+    background: url('/assets/sslg-logo.png') center/cover no-repeat;
     opacity: .25;
 }
 
