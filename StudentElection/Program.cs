@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using StudentElection.Model.Data;
 using StudentElection.Repository;
 using StudentElection.Service;
@@ -7,9 +9,33 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-// Uses the existing database (created with the SQL script) - no migrations
+// Uses an existing database (created with the SQL script) - no migrations.
+var databaseUrl = builder.Configuration["DATABASE_URL"];
 builder.Services.AddDbContext<AppDBContext>(o =>
-    o.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    if (string.IsNullOrWhiteSpace(databaseUrl))
+    {
+        o.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+        return;
+    }
+
+    var uri = new Uri(databaseUrl);
+    if (uri.Scheme != "postgres" && uri.Scheme != "postgresql")
+        throw new InvalidOperationException("DATABASE_URL must be a PostgreSQL URL.");
+    var credentials = uri.UserInfo.Split(':', 2);
+    if (credentials.Length != 2 || string.IsNullOrWhiteSpace(uri.Host))
+        throw new InvalidOperationException("DATABASE_URL must include PostgreSQL credentials and a host.");
+    var connection = new NpgsqlConnectionStringBuilder
+    {
+        Host = uri.Host,
+        Port = uri.IsDefaultPort ? 5432 : uri.Port,
+        Database = Uri.UnescapeDataString(uri.AbsolutePath.TrimStart('/')),
+        Username = Uri.UnescapeDataString(credentials[0]),
+        Password = Uri.UnescapeDataString(credentials[1]),
+        SslMode = SslMode.VerifyFull
+    };
+    o.UseNpgsql(connection.ConnectionString);
+});
 
 // Repository
 builder.Services.AddScoped<ICandidateRepository, CandidateRepository>();
@@ -22,7 +48,10 @@ builder.Services.AddScoped<IExportService, ExportService>();
 
 var app = builder.Build();
 
-app.UseStaticFiles();
+// Serve the election artwork with an explicit media type. .NET 8 may not map AVIF by default.
+var contentTypes = new FileExtensionContentTypeProvider();
+contentTypes.Mappings[".avif"] = "image/avif";
+app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = contentTypes });
 
 // ServiceException -> { message } with the proper status code
 app.Use(async (ctx, next) =>

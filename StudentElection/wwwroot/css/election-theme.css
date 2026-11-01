@@ -1,0 +1,13 @@
+:root{--navy:#102553;--blue:#234997;--red:#c81026;--dark-red:#a4071b;--gold:#e8ba49;--ink:#17243b;--muted:#667188;--line:#cfd8e8}
+*,*::before,*::after{box-sizing:border-box}
+html{min-width:0;min-height:100%}
+body{position:relative;isolation:isolate;margin:0;min-width:0;min-height:100vh;min-height:100dvh;font-family:'Segoe UI',Arial,sans-serif;color:var(--ink);background:linear-gradient(105deg,#17427f,#414179 58%,#923d60)}
+body::before{content:"";position:absolute;inset:0 0 auto;height:100vh;height:100svh;background:url('/assets/election-background-hd.avif') center top / cover no-repeat;background-image:image-set(url('/assets/election-background-hd.avif') 1x,url('/assets/election-background-4k.avif') 2x);pointer-events:none;z-index:-1}
+button,input,select{font:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid rgba(234,187,72,.8);outline-offset:2px}
+@media(min-width:1600px){body::before{background-image:url('/assets/election-background-4k.avif')}}
+@media(min-width:901px) and (min-aspect-ratio:16/9){body::before{background-size:100% 100%}}
+@media(max-width:900px){
+body::before{height:90.112vw;background-size:160% auto;mask-image:linear-gradient(to bottom,#000 0%,#000 72%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 72%,transparent 100%)}
+}
