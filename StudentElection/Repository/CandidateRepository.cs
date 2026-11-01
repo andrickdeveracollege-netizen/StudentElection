@@ -34,6 +34,7 @@ public class CandidateRepository : ICandidateRepository
     }
 
     public Task DeleteAllAsync() =>
-        _db.Database.ExecuteSqlRawAsync(
-            "DELETE FROM dbo.Candidates; DBCC CHECKIDENT ('dbo.Candidates', RESEED, 0);");
+        _db.Database.ExecuteSqlRawAsync(_db.Database.IsNpgsql()
+            ? "DELETE FROM \"Candidates\"; ALTER TABLE \"Candidates\" ALTER COLUMN \"Id\" RESTART WITH 1;"
+            : "DELETE FROM dbo.Candidates; DBCC CHECKIDENT ('dbo.Candidates', RESEED, 0);");
 }

@@ -39,6 +39,7 @@ public class VoteRepository : IVoteRepository
     }
 
     public Task DeleteAllAsync() =>
-        _db.Database.ExecuteSqlRawAsync(
-            "DELETE FROM dbo.Votes; DBCC CHECKIDENT ('dbo.Votes', RESEED, 0);");
+        _db.Database.ExecuteSqlRawAsync(_db.Database.IsNpgsql()
+            ? "DELETE FROM \"Votes\"; ALTER TABLE \"Votes\" ALTER COLUMN \"Id\" RESTART WITH 1;"
+            : "DELETE FROM dbo.Votes; DBCC CHECKIDENT ('dbo.Votes', RESEED, 0);");
 }
