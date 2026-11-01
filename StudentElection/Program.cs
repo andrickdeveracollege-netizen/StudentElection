@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using StudentElection.Model.Data;
@@ -47,7 +48,10 @@ builder.Services.AddScoped<IExportService, ExportService>();
 
 var app = builder.Build();
 
-app.UseStaticFiles();
+// Serve the election artwork with an explicit media type. .NET 8 may not map AVIF by default.
+var contentTypes = new FileExtensionContentTypeProvider();
+contentTypes.Mappings[".avif"] = "image/avif";
+app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = contentTypes });
 
 // ServiceException -> { message } with the proper status code
 app.Use(async (ctx, next) =>
